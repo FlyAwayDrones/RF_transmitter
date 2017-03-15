@@ -1,37 +1,19 @@
-
-/*
- Copyright (C) 2011 J. Coliz <maniacbug@ymail.com>
-
- This program is free software; you can redistribute it and/or
- modify it under the terms of the GNU General Public License
- version 2 as published by the Free Software Foundation.
- */
-
-/**
- * Example for Getting Started with nRF24L01+ radios. 
- *
- * This is an example of how to use the RF24 class.  Write this sketch to two 
- * different nodes.  Put one of the nodes into 'transmit' mode by connecting 
- * with the serial monitor and sending a 'T'.  The ping node sends the current 
- * time to the pong node, which responds by sending the value back.  The ping 
- * node can then see how long the whole cycle took.
- */
-
 #include <SPI.h>
 #include "nRF24L01.h"
-#include "RF24.h"
-#include "printf.h"
+#include "libraries\RF24.h"
+#include "libraries\printf.h"
 
-//
-// Hardware configuration
-//
-
-// Set up nRF24L01 radio on SPI bus plus pins 9 & 10 
 int relay = 8;
 const int SW_pin = 2; // digital pin connected to switch output
-const int X_pin = 0; // analog pin connected to X output
-const int Y_pin = 1; // analog pin connected to Y output
-String stringhex="0";
+const int J1X = 0; // analog pin connected to X output
+const int J1Y = 1; // analog pin connected to Y output
+const int J2X = 2; // analog pin connected to X output
+const int J2Y = 3; // analog pin connected to Y output
+String stringj1x="0";
+String stringj1y="0";
+String stringj2x="0";
+String stringj2y="0";
+String stringhex="";
 
 
 RF24 radio(9,10);
@@ -129,11 +111,29 @@ void loop(void)
     radio.stopListening();
 
     // Take the time, and send it.  This will block until complete
-    int time = analogRead(X_pin);
+    int time = analogRead(J1X);
     time=map(time,0,1022,0,15);
-    stringhex=String(time,HEX);
-    printf("Now sending %c...",stringhex[0]);
-    bool ok = radio.write( &stringhex[0], 1 );
+    stringj1x=String(time,HEX);
+    time = analogRead(J1Y);
+    time=map(time,0,1022,0,15);
+    stringj1y=String(time,HEX);
+    time = analogRead(J2X);
+    time=map(time,0,1022,0,15);
+    stringj2x=String(time,HEX);
+    time = analogRead(J2Y);
+    time=map(time,0,1022,0,15);
+    stringj2y=String(time,HEX);
+    
+    stringhex="";
+    stringhex+=stringj1x[0];
+    stringhex+=stringj1y[0];
+    stringhex+=stringj2x[0];
+    stringhex+=stringj2y[0];
+    stringhex+=";";
+
+    printf("Now sending ...");
+    Serial.print(stringhex+" ");
+    bool ok = radio.write( &stringhex, 5 );
     
     if (ok)
       printf("ok...");
@@ -166,7 +166,7 @@ void loop(void)
     }
 
     // Try again 1s later
-    delay(100);
+    delay(300);
   }
 
   //
