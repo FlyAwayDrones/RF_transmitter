@@ -1,3 +1,4 @@
+#include <flyaway_protocol.h>
 #include <SPI.h>
 #include "nRF24L01.h"
 #include "RF24.h"
@@ -45,7 +46,7 @@ void loop(void)
   
     radio.stopListening();
 
-    // Take the time, and send it.  This will block until complete
+    /* Take the time, and send it.  This will block until complete
     int time = analogRead(J1X);
     time=map(time,0,1022,0,15);
     stringj1x=String(time,HEX);
@@ -96,8 +97,19 @@ void loop(void)
       
       Serial.print("Resposta: ");
       Serial.println(receivedControls);
+    }*/
+    
+    if( Serial.available())
+    {
+      fad_frame frame_t;
+      char buff[128];
+      uint16_t in = Serial.read();
+      
+      create_manual_control_frame(&frame_t, buff, sizeof(buff), 0, 0, in);
+      Serial.print("enviando msg_id ="); Serial.println(get_message_id(buff));
+      radio.write(&buff, sizeof(buff));
     }
-
+    
     // Try again 1s later
     delay(100);
   
