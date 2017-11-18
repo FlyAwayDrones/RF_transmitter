@@ -19,6 +19,11 @@ String stringj2y="0";
 char stringhex[6]="0a00;";
 char receivedControls[6]="00a0;";
 
+int sensorPinA = A4;    // select the input pin for the potentiometer
+int sensorPinB = A5;
+//int ledPin = 13;      // select the pin for the LED
+int sensorValueA = 0;  // variable to store the value coming from the sensor
+int sensorValueB = 0;
 
 RF24 radio(9,10);
 
@@ -59,7 +64,7 @@ void loop(void)
     time = analogRead(J2Y);
     time=map(time,0,1022,0,15);
     stringj2y=String(time,HEX);
-    
+
     stringhex[0]=stringj1x[0];
     stringhex[1]=stringj1y[0];
     stringhex[2]=stringj2x[0];
@@ -69,10 +74,10 @@ void loop(void)
     Serial.print("Posicoes: ");
     Serial.print(stringhex);
     bool ok = radio.write( &stringhex, sizeof(stringhex));
-    
-    if (ok) 
+
+    if (ok)
       Serial.print(" OK! ");
-      
+
     else
       Serial.print(" FALHOU! ");
 
@@ -92,26 +97,44 @@ void loop(void)
     else
     {
       // Grab the response, compare, and send to debugging spew
-      
+
       radio.read( &receivedControls, sizeof(receivedControls));
-      
+
       Serial.print("Resposta: ");
       Serial.println(receivedControls);
     }*/
-    
-    if( Serial.available())
-    {
+
+    //if( Serial.available())
+    //{
+
+      sensorValueA = analogRead(sensorPinA);
+      sensorValueB = analogRead(sensorPinB);
+
       fad_frame frame_t;
       char buff[128];
-      uint16_t in = Serial.read();
-      
-      create_manual_control_frame(&frame_t, buff, sizeof(buff), 0, 0, in);
-      Serial.print("enviando msg_id ="); Serial.println(get_message_id(buff));
+      uint16_t x, y, z;
+
+      //x = Serial.parseInt();
+      x = map(sensorValueA, 0, 1022, 0, 15);
+
+      //y = Serial.parseInt();
+      y = map(sensorValueB, 0, 1022, 0, 15);
+
+      Serial.println(x);
+      Serial.println(y);
+
+      //z = Serial.parseInt();
+      //z = map(z, 0, 1022, 0, 15);
+
+      create_manual_control_frame(&frame_t, buff, sizeof(buff), x, y, 0);
+      Serial.print("msg_id ="); Serial.println(get_message_id(buff)); Serial.println("enviando...");
       radio.write(&buff, sizeof(buff));
-    }
-    
+
+      //fad_manual_control_t teste;
+      //decode_manual_control_frame(buff, &teste);
+    //}
+
     // Try again 1s later
-    delay(100);
-  
+    //delay(100);
 
 }
